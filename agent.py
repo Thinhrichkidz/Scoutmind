@@ -8,10 +8,10 @@ tool the model asks for, feed the result back, repeat until save_summary.
 import json
 import urllib.request
 
+import config
 import tools
 
-MODEL = "qwen3:8b"
-OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_URL = f"http://{config.OLLAMA_HOST}/api/chat"
 MAX_STEPS = 10
 
 # Baseline scope: the booby-trapped page is hidden from search until the attack stage.
@@ -87,7 +87,13 @@ TOOL_SCHEMAS = [
 def call_ollama(messages):
     """POST the conversation to Ollama and return the model's reply message."""
     body = json.dumps(
-        {"model": MODEL, "messages": messages, "tools": TOOL_SCHEMAS, "stream": False}
+        {
+            "model": config.MODEL_NAME,
+            "messages": messages,
+            "tools": TOOL_SCHEMAS,
+            "stream": False,
+            "options": {"num_ctx": config.NUM_CTX},
+        }
     ).encode("utf-8")
     request = urllib.request.Request(
         OLLAMA_URL, data=body, headers={"Content-Type": "application/json"}

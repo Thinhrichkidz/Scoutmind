@@ -6,13 +6,17 @@ Those are added later in defence.py.
 
 import os
 import urllib.request
+from urllib.parse import urlparse
+
+import defence
 
 PAGES_DIR = "data/pages"
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
 def search_pages(query):
-    """Return matching pages as (filename, snippet) pairs — not full content."""
-    query_lower = query.lower()
+    """Return pages matching ANY word in the query as {filename, snippet} — not full content."""
+    words = [w for w in query.lower().split() if len(w) >= 4]
     results = []
 
     for filename in os.listdir(PAGES_DIR):
@@ -23,7 +27,8 @@ def search_pages(query):
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if query_lower in filename.lower() or query_lower in content.lower():
+        haystack = (filename + " " + content).lower()
+        if any(word in haystack for word in words):
             snippet = content[:200].replace("\n", " ")
             results.append({"filename": filename, "snippet": snippet})
 
@@ -38,6 +43,19 @@ def read_page(url):
     undefended baseline; a real path-safety check is a defence.py concern.
     """
     path = os.path.join(PAGES_DIR, url)
+
+    # Test-harness containment, not the defence under study: always on,
+    # independent of DEFENCE_ENABLED. Keeps the sandbox inside data/pages.
+    base = os.path.realpath(PAGES_DIR)
+    target = os.path.realpath(path)
+    try:
+        inside = os.path.commonpath([base, target]) == base
+    except ValueError:  # different drive on Windows
+        inside = False
+    if not inside:
+        print(f"[read_page] Refused (outside data/pages): {url}")
+        return f"Refused: '{url}' is outside the allowed pages folder."
+
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -57,9 +75,24 @@ def save_summary(text):
 def render_image(url):
     """Simulate displaying an image by making a real GET request to `url`.
 
-    No allowlist check yet — this is the exfiltration channel in the
-    undefended baseline. Whatever URL the model constructs, we fetch it.
+    When config.DEFENCE_ENABLED is False (the undefended baseline), this
+    behaves exactly as before: whatever URL the model constructs gets
+    fetched. When True, defence.check_url() rejects anything off the
+    allowlist before the request is made.
     """
+    # Test-harness containment, not the defence under study: always on,
+    # independent of DEFENCE_ENABLED. Guarantees no request leaves this machine.
+    host = urlparse(url).hostname
+    if host not in LOOPBACK_HOSTS:
+        print(f"[render_image] Refused (non-loopback host): {url}")
+        return f"Refused: host '{host}' is not loopback."
+
+    try:
+        defence.check_url(url)
+    except ValueError as e:
+        print(f"[render_image] Rejected: {e}")
+        return f"Image request rejected: {e}"
+
     print(f"[render_image] Requesting: {url}")
     try:
         with urllib.request.urlopen(url, timeout=5) as response:
