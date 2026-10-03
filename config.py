@@ -7,8 +7,8 @@ OLLAMA_HOST = "localhost:11434"
 # alone are several thousand tokens each.
 NUM_CTX = 16384
 
-# Domains render_image() is allowed to reach when DEFENCE_ENABLED is True.
-ALLOWED_DOMAINS = ["127.0.0.1"]
+# Origins (scheme, host, and explicit port) allowed when DEFENCE_ENABLED is True.
+ALLOWED_ORIGINS = ["http://127.0.0.1:8001"]
 
 # Master switch for the allowlist check in defence.py. Off by default so the
 # undefended baseline (Goal 2) keeps working unchanged.

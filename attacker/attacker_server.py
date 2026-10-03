@@ -8,11 +8,13 @@ never a real external service.
 """
 
 import datetime
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HOST = "127.0.0.1"
-PORT = 8000
-LOG_FILE = "attacker/attacker_log.txt"
+PORT = 9000
+# Keep the log beside this script, regardless of the launch directory.
+LOG_FILE = Path(__file__).resolve().parent / "attacker_log.txt"
 
 
 class ExfilLogHandler(BaseHTTPRequestHandler):
