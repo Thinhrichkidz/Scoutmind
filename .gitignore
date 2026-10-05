@@ -1,1 +1,4 @@
 __pycache__/
+
+# Pages published from the attacker console (a local demo, not part of the project)
+data/pages/published_*.html
