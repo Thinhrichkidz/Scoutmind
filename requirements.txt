@@ -1,1 +1,4 @@
-# stdlib only, nothing to install
+# Packages used by the interfaces (the agent, tools and experiments use only the standard library).
+# Pinned to the versions the project was developed and tested with.
+streamlit==1.37.1
+flask==3.0.3
