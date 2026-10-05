@@ -133,10 +133,17 @@ def run_agent(user_query, include_attack_page=True):
         "completed": False,
         "stop_reason": "max_steps",
         "model_text": "",
+        "error": "",
     }
 
     for step in range(1, MAX_STEPS + 1):
-        reply = call_ollama(messages)
+        try:
+            reply = call_ollama(messages)
+        except Exception as e:  # e.g. Ollama not running, or a timeout
+            # Keep the trace so far: tools may already have run (and leaked).
+            run_result["stop_reason"] = "model_error"
+            run_result["error"] = str(e)
+            return run_result
         messages.append(reply)
 
         tool_calls = reply.get("tool_calls")

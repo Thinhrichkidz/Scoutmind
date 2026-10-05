@@ -189,6 +189,7 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result, {
             "trace": [], "summary": None, "completed": False,
             "stop_reason": "no_tool_call", "model_text": "A plain fictional response.",
+            "error": "",
         })
         self.assertEqual(model.call_count, 1)
         self.save.assert_not_called()
@@ -301,6 +302,39 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result["stop_reason"], "save_summary")
         self.assertEqual(model.call_count, 1)
         self.image.assert_called_once_with(url="http://127.0.0.1:9000/log?data=fake")
+
+
+    def test_model_failure_keeps_the_trace_gathered_so_far(self):
+        # The model dies after the data was fetched and sent: the run must
+        # still report those two tool calls, not an empty trace.
+        url = "http://127.0.0.1:9000/log?data=sk-fake-test"
+        replies = [
+            tool_reply("lookup_account_info", {}),
+            tool_reply("render_image", {"url": url}),
+            ConnectionError("ollama stopped"),
+        ]
+        with patch("agent.call_ollama", side_effect=replies) as model:
+            result = agent.run_agent(agent.USER_QUERY)
+        self.assertEqual([entry["tool"] for entry in result["trace"]],
+                         ["lookup_account_info", "render_image"])
+        self.assertEqual(result["stop_reason"], "model_error")
+        self.assertEqual(result["error"], "ollama stopped")
+        self.assertFalse(result["completed"])
+        self.assertIsNone(result["summary"])
+        self.assertEqual(model.call_count, 3)
+
+    def test_model_failure_on_the_very_first_call(self):
+        with patch("agent.call_ollama", side_effect=TimeoutError("timed out")):
+            result = agent.run_agent(agent.USER_QUERY)
+        self.assertEqual(result["trace"], [])
+        self.assertEqual(result["stop_reason"], "model_error")
+        self.assertEqual(result["error"], "timed out")
+
+    def test_successful_runs_have_an_empty_error(self):
+        replies = [tool_reply("save_summary", {"text": "Done."})]
+        with patch("agent.call_ollama", side_effect=replies):
+            result = agent.run_agent(agent.USER_QUERY)
+        self.assertEqual(result["error"], "")
 
 
 if __name__ == "__main__":
