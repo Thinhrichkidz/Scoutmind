@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="620" viewBox="0 0 980 620" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#222"/>
+    </marker>
+  </defs>
+  <rect width="980" height="620" fill="#ffffff"/>
+  <text x="490" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#111">Figure 1. ScoutMind architecture</text>
+
+  <!-- Dashed single-context region -->
+  <rect x="330" y="150" width="430" height="300" rx="10" fill="#fdf2e9" stroke="#c9792b" stroke-width="2" stroke-dasharray="7,5"/>
+  <text x="545" y="172" text-anchor="middle" font-size="12.5" fill="#8a4a16" font-style="italic">single context: user request and page text are mixed, with no separation</text>
+
+  <!-- User -->
+  <rect x="30" y="250" width="140" height="70" rx="8" fill="#eaf2fb" stroke="#2f6fab" stroke-width="2"/>
+  <text x="100" y="280" text-anchor="middle" font-size="14" font-weight="bold">User</text>
+  <text x="100" y="298" text-anchor="middle" font-size="11" fill="#333">"3-source summary..."</text>
+
+  <!-- Agent loop -->
+  <rect x="350" y="250" width="200" height="90" rx="8" fill="#ffffff" stroke="#222" stroke-width="2.5"/>
+  <text x="450" y="278" text-anchor="middle" font-size="14" font-weight="bold">Agent loop</text>
+  <text x="450" y="296" text-anchor="middle" font-size="11" fill="#444">agent.py : run_agent()</text>
+  <text x="450" y="312" text-anchor="middle" font-size="11" fill="#444">messages.append(tool result)</text>
+
+  <!-- Model -->
+  <rect x="620" y="250" width="150" height="90" rx="8" fill="#eef7ee" stroke="#2e7d32" stroke-width="2"/>
+  <text x="695" y="282" text-anchor="middle" font-size="14" font-weight="bold">Model</text>
+  <text x="695" y="300" text-anchor="middle" font-size="11" fill="#333">qwen3:8b via Ollama</text>
+  <text x="695" y="316" text-anchor="middle" font-size="10.5" fill="#333">plans which tool to call</text>
+
+  <!-- Tools row -->
+  <g font-size="10.3">
+    <rect x="330" y="480" width="110" height="46" rx="6" fill="#f5f5f5" stroke="#555"/>
+    <text x="385" y="500" text-anchor="middle" font-weight="bold">search_pages</text>
+    <text x="385" y="514" text-anchor="middle" fill="#555">normal</text>
+
+    <rect x="455" y="480" width="110" height="46" rx="6" fill="#fdecea" stroke="#b23b2e" stroke-width="1.6"/>
+    <text x="510" y="500" text-anchor="middle" font-weight="bold">read_page</text>
+    <text x="510" y="514" text-anchor="middle" fill="#8a1f16">entry point</text>
+
+    <rect x="580" y="480" width="130" height="46" rx="6" fill="#fdecea" stroke="#b23b2e" stroke-width="1.6"/>
+    <text x="645" y="500" text-anchor="middle" font-weight="bold" font-size="9.8">lookup_account_info</text>
+    <text x="645" y="514" text-anchor="middle" fill="#8a1f16">privileged</text>
+
+    <rect x="720" y="480" width="110" height="46" rx="6" fill="#fdecea" stroke="#b23b2e" stroke-width="1.6"/>
+    <text x="775" y="500" text-anchor="middle" font-weight="bold">render_image</text>
+    <text x="775" y="514" text-anchor="middle" fill="#8a1f16">outbound</text>
+
+    <rect x="845" y="480" width="110" height="46" rx="6" fill="#f5f5f5" stroke="#555"/>
+    <text x="900" y="500" text-anchor="middle" font-weight="bold">save_summary</text>
+    <text x="900" y="514" text-anchor="middle" fill="#555">output</text>
+  </g>
+
+  <!-- data/pages source -->
+  <rect x="30" y="480" width="140" height="60" rx="8" fill="#fff8e1" stroke="#b58900" stroke-width="2"/>
+  <text x="100" y="505" text-anchor="middle" font-size="12" font-weight="bold">data/pages/</text>
+  <text x="100" y="521" text-anchor="middle" font-size="10" fill="#555">incl. hidden comment</text>
+  <text x="100" y="534" text-anchor="middle" font-size="10" fill="#555">in ev_battery_costs.html</text>
+
+  <!-- Attacker server -->
+  <rect x="800" y="550" width="150" height="55" rx="8" fill="#fdecea" stroke="#b23b2e" stroke-width="2"/>
+  <text x="875" y="572" text-anchor="middle" font-size="12" font-weight="bold">attacker_server.py</text>
+  <text x="875" y="588" text-anchor="middle" font-size="10" fill="#555">127.0.0.1:9000 → log</text>
+
+  <!-- arrows -->
+  <line x1="170" y1="280" x2="348" y2="280" stroke="#222" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="258" y="272" text-anchor="middle" font-size="10.5">user request</text>
+
+  <line x1="552" y1="265" x2="618" y2="265" stroke="#222" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="585" y="256" text-anchor="middle" font-size="9.5">messages + tool schemas</text>
+  <line x1="618" y1="315" x2="552" y2="315" stroke="#222" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="585" y="331" text-anchor="middle" font-size="9.5">tool_call request</text>
+
+  <line x1="385" y1="478" x2="420" y2="342" stroke="#555" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="510" y1="478" x2="460" y2="342" stroke="#b23b2e" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="645" y1="478" x2="480" y2="342" stroke="#b23b2e" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="775" y1="478" x2="505" y2="342" stroke="#b23b2e" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="900" y1="478" x2="530" y2="342" stroke="#555" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <rect x="595" y="435" width="270" height="18" fill="#fdf2e9"/>
+  <text x="730" y="449" text-anchor="middle" font-size="10" fill="#555">agent.run_tool() executes the matching function</text>
+
+  <line x1="100" y1="480" x2="440" y2="400" stroke="#b58900" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="230" y="430" text-anchor="middle" font-size="9.5" fill="#8a6d00" transform="rotate(-17 230 430)">read_page() result incl. hidden comment</text>
+
+  <line x1="775" y1="526" x2="860" y2="548" stroke="#b23b2e" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="845" y="542" text-anchor="middle" font-size="9.5" fill="#8a1f16">GET with leaked data</text>
+
+  <text x="490" y="600" text-anchor="middle" font-size="11" fill="#666" font-style="italic">Tools outlined in red are the attack surface: read_page is the entry point for untrusted content; lookup_account_info and render_image are the privileged action and exfiltration channel it can hijack.</text>
+</svg>
