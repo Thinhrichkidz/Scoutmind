@@ -1,17 +1,20 @@
-# ScoutMind report: corrections for v2
+# ScoutMind report corrections — report_v0
 
 **Why this file exists.** The v1 draft (`ScoutMind.pdf`) was written from
 `report_material.md` as it stood on 4 October 2026 — before the formal
-measured experiment was actually run. That experiment has since been
-completed for the core attack scenario (`results/attack_results.csv`,
-`results/defence_results.csv`, 10 real trials each, verified directly against
-the files in this repo). The draft still describes that experiment as
-"outstanding" and the interfaces as "not yet built," both of which are now
-false. This file gives corrected replacement text for every section that
-needs it. Sections not listed here (1, 2, 3, 4.1–4.5, 6, 9, 10.1–10.3) are
-accurate as written and do not need changes.
+measured experiment was actually run and before a full pass against the
+assignment's marking criteria. Since then: `results/attack_results.csv` and
+`results/defence_results.csv` each gained 10 real trials against the live
+model, `app.py`/`attacker/attacker_console.py`/`comparison.py` were built
+and tested, and a criteria-by-criteria review found a topic-coverage gap,
+a thin defence category, an orphan citation, and two placeholder URLs. This
+file gives corrected replacement text for every part of the draft that
+needs it, in the order those parts appear in the report. Sections not
+mentioned here (1, 4.1–4.5, 6.1–6.2, 6.4, 9, 10.1–10.3) are accurate as
+written and need no changes.
 
-Do not invent numbers beyond what is in this file or in the CSVs themselves.
+Do not invent numbers beyond what is in this file or in the CSVs
+themselves.
 
 ---
 
@@ -36,6 +39,57 @@ Do not invent numbers beyond what is in this file or in the CSVs themselves.
 > reduced the image-channel leak to 0 of 10 runs (0%) at no cost to task
 > completion, but did not reduce the underlying goal hijack (8 of 10 runs,
 > 80%) or the text-only leak (8 of 10, 80%). We analyse these limits...
+
+---
+
+## Section 2 — add a new subsection, 2.4, after 2.3 "Classifying the scenario"
+
+The assignment brief names five attack-surface topics explicitly: *direct
+and indirect prompt injection, agent goal hijacking, tool misuse, memory and
+context poisoning, and excessive agency.* Section 2.1 discusses "memory and
+context" only as an architectural property (ScoutMind keeps no long-term
+memory; its exposure is the short-term context window). Memory/context
+poisoning as an attack technique is never discussed. Insert this as a new
+2.4, renumbering the current "3. Real-world grounding" to stay in sequence:
+
+> ### 2.4 Memory and context poisoning
+>
+> A distinct risk alongside indirect prompt injection is memory and context
+> poisoning: content that corrupts not just the current turn's reasoning but
+> a persistent store the agent later trusts — a long-term memory, a vector
+> database used for retrieval, or a conversation history reused across
+> sessions. Where indirect injection smuggles an instruction into a single
+> context window, poisoning aims to leave something behind that influences
+> *future* turns, often ones a different, unrelated request would trigger.
+>
+> ScoutMind's exposure to this specific risk is limited by design: each run
+> is single-turn, with no memory carried between requests, so a poisoned
+> page cannot outlive the session that reads it. This also means ScoutMind
+> does not demonstrate the more severe version of this risk, in which a
+> single injection compromises every future interaction rather than one. A
+> deployment that *did* give ScoutMind persistent memory — for example,
+> caching page summaries to answer future questions faster — would reopen
+> this exact vulnerability in a harder-to-detect form: the injected
+> instruction would no longer need to survive in the live page at all, only
+> in whatever the agent chose to remember from it.
+
+---
+
+## Section 3.2 — fix the orphan Nelson (2025) citation
+
+Nelson (2025) is in your reference list but never cited in the body. Add it
+as a second source for the Comet disclosure, at the end of the first
+paragraph of 3.2:
+
+**Current last sentence of the first paragraph:**
+> Perplexity stated the issue had been patched with no user data
+> compromised, while Brave maintained that it remained exploitable after the
+> initial fix.
+
+**Replace with:**
+> Perplexity stated the issue had been patched with no user data
+> compromised, while Brave maintained that it remained exploitable after the
+> initial fix (Brave, 2025; Nelson, 2025).
 
 ---
 
@@ -90,6 +144,32 @@ payload, the attacker server, and every other mention in the report use port
 
 ---
 
+## Section 6 — add a paragraph after 6.2 "Why defend the channel rather than the injection"
+
+The brief names four defence categories: *input and output filtering,
+privilege separation, human-in-the-loop confirmation, capability and
+information-flow control.* Capability/information-flow control (the
+allowlist, CaMeL) and output filtering (8.2) are covered well, and privilege
+separation is explicitly unimplemented future work. Input filtering is never
+discussed. Insert:
+
+> We also did not pursue **input filtering** — scanning page content for
+> injection-like patterns before it reaches the model. Section 2.2 already
+> gives the reason: EchoLeak's hidden instructions were phrased specifically
+> to pass Microsoft's own cross-prompt-injection classifier (Reddy & Gujral,
+> 2025), and an attacker who can see our filter can phrase around it the
+> same way. A classifier only has to be wrong once per attacker attempt; the
+> allowlist has to be wrong on every attempt, which is a materially
+> different bar. This is also why **human-in-the-loop confirmation**, the
+> remaining category from the brief, is treated in this report as a
+> governance question (Section 9.2) rather than a defence we implemented:
+> its effectiveness depends on *when* it fires, not just *whether* it
+> exists, and the GitHub MCP finding (Section 9.2) that users default to
+> "always allow" is itself evidence that confirmation prompts are a weak
+> control unless reserved for rare, high-stakes actions.
+
+---
+
 ## Section 7 — replace in full
 
 ### 7.1 Method
@@ -114,9 +194,10 @@ the primary evidence for this section.
 
 The third is the **status of the three extension scenarios** the same runner
 supports (`cdn`, `text_only`, `legit_email`): built and covered by unit
-tests, but not yet executed against the live model as their own measured
-condition. Section 8 reports what we can say about them from the exploratory
-runs and from the literature in the meantime.
+tests, with injection wordings already adapted from the final tuned baseline
+(naming the tool, URL-encoding, full examples), but not yet executed against
+the live model as their own measured condition. Section 8 reports what we can
+say about them from the exploratory runs and the literature in the meantime.
 
 The method follows established agent-security benchmarks such as AgentDojo
 (Debenedetti et al., 2024), which report both attack success and utility —
@@ -233,13 +314,47 @@ remaining work before final submission.
 
 ---
 
+## References — fill in both placeholder URLs
+
+**Delete:**
+> Department of Industry, Science and Resources. (2019). *Australia's AI
+> ethics principles*. Australian Government. [URL to verify]
+
+**Replace with:**
+> Department of Industry, Science and Resources. (2019). *Australia's AI
+> ethics principles*. Australian Government.
+> https://www.industry.gov.au/publications/australias-ai-ethics-principles
+
+**Delete:**
+> OWASP Foundation. (2025). *OWASP Top 10 for LLM applications 2025*. [URL to add]
+
+**Replace with:**
+> OWASP Foundation. (2025). *OWASP Top 10 for LLM applications 2025*. OWASP
+> GenAI Security Project.
+> https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/
+
+(Both verified live via web search, 2026-10-06. Worth a quick manual check
+of both pages immediately before submission in case either moves.)
+
+---
+
 ## What is still genuinely outstanding (keep reporting these honestly)
 
 - The three extension scenarios (`cdn`, `text_only` as an isolated
-  condition, `legit_email`) as separately measured 10-trial experiments.
+  condition, `legit_email`) as separately measured 10-trial experiments —
+  the code and injection wording for all three are ready; they just haven't
+  been run yet.
 - Second-tool reproduction of the baseline runs.
 - `README.md` still describes an earlier scaffold stage.
 - Privilege separation (gating `lookup_account_info` on whether the request
   came from the user) is design discussion only, not implemented — this
   remains accurate and should stay in the report as future work (Section
   10.3, CaMeL discussion).
+
+## Still needs a human, not an AI
+
+`10.4 Individual contributions` still reads `[Name 1]: [files owned...]
+[Name 2]: [files owned...]`. Fill in actual names, student IDs, the files
+each of you owns, and the report sections each of you wrote — this is
+exactly the kind of thing a marker checks against your peer-assessment
+forms, so it needs to be accurate, not just non-empty.
