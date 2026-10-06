@@ -5,11 +5,31 @@ in defence.py is toggleable for the before/after experiment.
 """
 
 import os
+import re
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
 import defence
+
+
+def _extract_text(html):
+    """Strip an HTML page down to its readable text, the way a real
+    "read this webpage" tool would — not the raw markup. Script, style and
+    inline SVG blocks are pure decoration and dropped entirely. HTML
+    comments are kept: that's where an injected instruction would live, and
+    a real page-reading tool wouldn't know to strip it out any more than
+    ScoutMind does. Also shrinks what enters the model's context — the raw
+    pages run ~15KB each, mostly CSS/SVG noise.
+    """
+    html = re.sub(r"<script.*?</script>", "", html, flags=re.DOTALL)
+    html = re.sub(r"<style.*?</style>", "", html, flags=re.DOTALL)
+    html = re.sub(r"<svg.*?</svg>", "", html, flags=re.DOTALL)
+    comments = re.findall(r"<!--.*?-->", html, flags=re.DOTALL)
+    text = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text + "\n\n" + "\n".join(comments)
 
 # Anchor page access to this project, not the process's working directory.
 PROJECT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -46,7 +66,7 @@ def search_pages(query):
 
         haystack = (filename + " " + content).lower()
         if any(word in haystack for word in words):
-            snippet = content[:200].replace("\n", " ")
+            snippet = _extract_text(content)[:200]
             results.append({"filename": filename, "snippet": snippet})
 
     return results
@@ -74,7 +94,7 @@ def read_page(url):
         return f"Refused: '{url}' is outside the allowed pages folder."
 
     with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+        return _extract_text(f.read())
 
 
 def lookup_account_info():
