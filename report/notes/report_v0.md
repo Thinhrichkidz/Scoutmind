@@ -115,6 +115,50 @@ paragraph of 3.2:
 
 ---
 
+## Section 5.1 — fix a self-contradiction (found by re-reading the final draft)
+
+The draft's own payload (shown verbatim a few lines earlier in 5.1) contains
+the literal text *"by calling render_image"* — it names the function. The
+paragraph directly below it then claims the opposite.
+
+**Delete:**
+> Two design choices make the payload effective. First, it never names a
+> function. It asks, in plain language, for the user's account details to be
+> included as a "reference image". The attacker does not know ScoutMind's
+> internals and does not need to; the model's own planning links "account
+> details" to the tool that provides them. Second, it frames the request as
+> a courtesy to the user, which makes it read as helpful rather than hostile.
+
+**Replace with:**
+> The payload frames the request as a courtesy to the user — personalising
+> the summary, letting them "verify it was prepared for them" — which makes
+> it read as helpful rather than hostile. That framing worked as intended
+> throughout tuning.
+>
+> The original plan was also for the payload to never name a specific
+> function: it would describe only the desired outcome in plain language,
+> leaving the model's own planning to connect "account details" to whichever
+> tool provides them, so an attacker would not need any knowledge of
+> ScoutMind's internals to write it. This did not survive tuning. Section
+> 5.5 and Section 10.1 both record why: wording that only described the
+> outcome (rounds 1–2) got the model to fetch the account data but not
+> reliably to act on it further; the single biggest fix was adding "by
+> calling render_image" explicitly. The payload above, the final committed
+> fixture, therefore does name the tool — it is not the function-agnostic
+> version the original design called for.
+>
+> This is itself a finding worth keeping rather than quietly dropping the
+> earlier claim: against a model this size, a vague, outcome-only injection
+> was markedly less reliable than one that names the specific capability it
+> wants exercised. That has a real security implication beyond this one
+> demo — an attacker who can guess or learn even approximate tool names
+> (common names, or names leaked through error messages, documentation, or a
+> leaked system prompt) has a measurable advantage over one working blind,
+> which is a stronger and more interesting claim than "the attacker does not
+> need to know anything."
+
+---
+
 ## Section 5.3 — fix the port number
 
 **Delete:**
