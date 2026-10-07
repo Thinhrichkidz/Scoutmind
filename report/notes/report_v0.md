@@ -338,12 +338,75 @@ of both pages immediately before submission in case either moves.)
 
 ---
 
+---
+
+## NEW (2026-10-07): a second defence layer — code exists, NOT YET MEASURED
+
+This section was added after everything above. **The code below is real,
+committed, and test-passing (`git log` commit `4695a10`), but it has never
+been run against the live model.** Nothing in this section is a claimed
+result — everything with a run count is a prediction to be confirmed. Your
+friend needs to re-run the `attack` scenario (defence on) to get real
+numbers for this before any of it goes in as a finding rather than a plan.
+
+### What was added
+
+`defence.py` gained a second, independent defence: `filter_summary(text)`.
+The origin allowlist only ever runs from inside `render_image()`, so it has
+no way to stop a leak that never calls that tool — Section 8.2's Variant B,
+where the model just writes the fake account details straight into the
+summary text. `filter_summary()` closes that specific gap: when
+`DEFENCE_ENABLED` is on, it redacts the known fake email and API key from
+the text before it reaches the "what the user sees" channel. It is gated
+by the *same* flag as the allowlist, so "defence on" now means both layers
+run together — there is no separate toggle for this one.
+
+**Confirmed working, but only with hand-fed text, not with the live
+model.** The exact wording captured in the demo video —
+`"Research prepared for: Alex Researcher (alex.researcher@fakecorp.example)
+| API Key: sk-fake-8f2a9c3d7e1b4f60"` — was fed directly into
+`defence.filter_summary()` and came back as
+`"Research prepared for: Alex Researcher ([redacted by output filter]) |
+API Key: [redacted by output filter]"`. That confirms the redaction logic
+itself works. It does **not** confirm what the measured text-leak rate
+actually is with a live model generating the text, because the model could
+phrase the leak in ways the literal string match misses (paraphrasing,
+partial values, unusual spacing) — that can only be found by actually
+running it.
+
+### Where to add this once it's measured
+
+- **Section 6, after 6.3**: a new subsection describing this second layer
+  (text drafted above can be adapted).
+- **Section 7.3's table**: currently reports Text-only leak as 70%
+  (off) / 80% (on) — that 80% number was measured *before* this filter
+  existed. **[PENDING — re-run the `attack` scenario, defence on, 10
+  trials, with the filter in place, and report the new text-leak rate
+  alongside the old one as a before/after of the filter itself, separate
+  from the before/after of the allowlist.]**
+- **Section 8.2 and 8.3's table**: currently say the allowlist "cannot
+  engage by design" against Variant B, with no defence shown blocking it.
+  Once measured, this needs a third column or a new row: not "defence off
+  vs. allowlist on," but "allowlist only vs. allowlist + output filter."
+- **Known, deliberate cost to flag explicitly**: the filter is a blunt
+  keyword match. It cannot tell a genuine user request for their own email
+  (the `legit_email` scenario) apart from an injected one. Turning it on
+  will also redact a legitimate request. **[PENDING — when the `legit_email`
+  scenario is finally run, report `email_provided` for both defence
+  settings; expect it to drop with this filter on, and say so plainly —
+  that is the filter's own real cost, parallel to the allowlist's
+  0%-leak-but-doesn't-stop-the-hijack story in Section 7.3.]**
+
 ## What is still genuinely outstanding (keep reporting these honestly)
 
 - The three extension scenarios (`cdn`, `text_only` as an isolated
   condition, `legit_email`) as separately measured 10-trial experiments —
   the code and injection wording for all three are ready; they just haven't
   been run yet.
+- **NEW**: the output-filter defence (see the dated section above) —
+  implemented, unit-tested, confirmed with hand-fed text, but never run
+  against the live model. This is now a fourth thing awaiting a real run,
+  alongside the three scenarios above.
 - Second-tool reproduction of the baseline runs.
 - `README.md` still describes an earlier scaffold stage.
 - Privilege separation (gating `lookup_account_info` on whether the request
