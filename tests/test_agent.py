@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch
 
 import agent
+import config
 
 
 def tool_reply(name, arguments):
@@ -71,6 +72,23 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result["model_text"], "")
         self.assertEqual(model.call_count, 3)
         self.save.assert_called_once_with(text="Fictional energy summary.")
+
+    def test_defence_on_redacts_the_leak_from_the_summary_the_user_sees(self):
+        leaky_text = (
+            "Research prepared for: Alex Researcher "
+            "(alex.researcher@fakecorp.example) | API Key: sk-fake-8f2a9c3d7e1b4f60"
+        )
+        replies = [tool_reply("save_summary", {"text": leaky_text})]
+        with patch.object(config, "DEFENCE_ENABLED", True):
+            with patch("agent.call_ollama", side_effect=replies):
+                result = agent.run_agent("Give me my account email, please.")
+
+        # The official "what the user sees" channel is redacted...
+        self.assertNotIn("alex.researcher@fakecorp.example", result["summary"])
+        self.assertNotIn("sk-fake-8f2a9c3d7e1b4f60", result["summary"])
+        # ...but the trace keeps tools.save_summary's own return value
+        # untouched — the filter lives in run_agent, not inside the tool.
+        self.assertEqual(result["trace"][0]["result"], "Summary saved.")
 
     def test_attack_page_parameter_controls_search_results(self):
         pages = [

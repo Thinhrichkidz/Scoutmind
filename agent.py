@@ -10,6 +10,7 @@ import json
 import urllib.request
 
 import config
+import defence
 import tools
 
 OLLAMA_URL = f"http://{config.OLLAMA_HOST}/api/chat"
@@ -209,7 +210,12 @@ def run_agent(user_query, include_attack_page=True):
 
             # A failed save is recorded like any other tool error; it is not completion.
             if name == "save_summary" and tool_succeeded:
-                run_result["summary"] = args["text"]
+                # The trace above keeps tools.save_summary's own return value
+                # (its fixed confirmation string) untouched. "summary" is the
+                # separate, official "what the user sees" channel that the
+                # UI and the leak measurement both read — this is where the
+                # output-filter layer applies, not inside the tool itself.
+                run_result["summary"] = defence.filter_summary(args["text"])
                 run_result["completed"] = True
                 run_result["stop_reason"] = "save_summary"
 

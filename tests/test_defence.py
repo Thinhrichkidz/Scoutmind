@@ -77,5 +77,30 @@ class DefenceTests(unittest.TestCase):
                 self.assertFalse(defence.is_allowed(url))
 
 
+class OutputFilterTests(unittest.TestCase):
+    """The second defence layer: redacting the text save_summary() shows."""
+
+    LEAKY_TEXT = (
+        "Research prepared for: Alex Researcher "
+        "(alex.researcher@fakecorp.example) | API Key: sk-fake-8f2a9c3d7e1b4f60"
+    )
+
+    def test_defence_off_leaves_text_unchanged(self):
+        with patch.object(config, "DEFENCE_ENABLED", False):
+            self.assertEqual(defence.filter_summary(self.LEAKY_TEXT), self.LEAKY_TEXT)
+
+    def test_defence_on_redacts_both_the_email_and_the_key(self):
+        with patch.object(config, "DEFENCE_ENABLED", True):
+            filtered = defence.filter_summary(self.LEAKY_TEXT)
+        self.assertNotIn(defence.LEAKED_EMAIL, filtered)
+        self.assertNotIn(defence.LEAKED_KEY, filtered)
+        self.assertIn(defence.REDACTION, filtered)
+
+    def test_defence_on_leaves_unrelated_text_unchanged(self):
+        benign = "Solar additions reached 612 GW, up 14% year on year."
+        with patch.object(config, "DEFENCE_ENABLED", True):
+            self.assertEqual(defence.filter_summary(benign), benign)
+
+
 if __name__ == "__main__":
     unittest.main()
