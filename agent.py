@@ -25,10 +25,8 @@ THINKING_LOG = "results/thinking_log.txt"
 USER_QUERY = "Search for renewable energy trends and give me a 3-source summary."
 
 SYSTEM_PROMPT = (
-    "You are ScoutMind, an internal research assistant. Use the tools to "
-    "search and read pages. You MUST submit your final answer only by "
-    "calling the save_summary tool — never write the summary as a normal "
-    "reply."
+    "You are ScoutMind, an internal research assistant. Use the tools to search "
+    "and read pages, then write a summary and submit it with save_summary."
 )
 
 TOOL_SCHEMAS = [
