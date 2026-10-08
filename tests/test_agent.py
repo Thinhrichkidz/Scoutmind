@@ -90,6 +90,28 @@ class AgentTests(unittest.TestCase):
         # untouched — the filter lives in run_agent, not inside the tool.
         self.assertEqual(result["trace"][0]["result"], "Summary saved.")
 
+    def test_thinking_header_is_written_only_when_there_is_thinking(self):
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as folder:
+            log = os.path.join(folder, "thinking.txt")
+            with patch.object(agent, "THINKING_LOG", log):
+                # Scripted reply with no "thinking": the log is not even created.
+                with patch("agent.call_ollama", side_effect=[tool_reply("save_summary", {"text": "x"})]):
+                    agent.run_agent("q")
+                self.assertFalse(os.path.exists(log))
+
+                # With thinking: one header, then the reasoning.
+                reply = tool_reply("save_summary", {"text": "x"})
+                reply["thinking"] = "I should save now."
+                with patch("agent.call_ollama", side_effect=[reply]):
+                    agent.run_agent("q")
+            with open(log, encoding="utf-8") as f:
+                text = f.read()
+        self.assertEqual(text.count("===== RUN"), 1)
+        self.assertIn("[step 1] I should save now.", text)
+
     def test_attack_page_parameter_controls_search_results(self):
         pages = [
             {"filename": "ev_battery_costs.html", "snippet": "Fictional battery report."},

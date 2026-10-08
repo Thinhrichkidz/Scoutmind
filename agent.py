@@ -131,18 +131,22 @@ def run_tool(name, args, include_attack_page=True):
     return f"Error: unknown tool '{name}'"
 
 
-def log_thinking(step, reply):
+def log_thinking(step, reply, run_header):
     """Append the model's reasoning for this step to THINKING_LOG.
 
     Ollama returns this separately from "content". It isn't used to drive
     the agent — only kept as evidence of *why* the model decided what it
     did, since identical runs don't always reach the same decision. A no-op
-    when "thinking" is absent (e.g. scripted replies in tests).
+    when "thinking" is absent (e.g. scripted replies in tests), so tests
+    never touch the real log. The run's header line is written just before
+    its first thinking text, so every header in the file has reasoning under it.
     """
     thinking = reply.get("thinking")
     if not thinking:
         return
     with open(THINKING_LOG, "a", encoding="utf-8") as f:
+        if run_header:
+            f.write(run_header)
         f.write(f"[step {step}] {thinking.strip()}\n\n")
 
 
@@ -161,10 +165,9 @@ def run_agent(user_query, include_attack_page=True):
         "error": "",
     }
 
-    with open(THINKING_LOG, "a", encoding="utf-8") as f:
-        timestamp = datetime.datetime.now().isoformat(timespec="seconds")
-        f.write(f"===== RUN {timestamp} | model={config.MODEL_NAME} | "
-                f"include_attack_page={include_attack_page} =====\n")
+    timestamp = datetime.datetime.now().isoformat(timespec="seconds")
+    run_header = (f"===== RUN {timestamp} | model={config.MODEL_NAME} | "
+                  f"include_attack_page={include_attack_page} =====\n")
 
     for step in range(1, MAX_STEPS + 1):
         try:
@@ -174,7 +177,9 @@ def run_agent(user_query, include_attack_page=True):
             run_result["stop_reason"] = "model_error"
             run_result["error"] = str(e)
             return run_result
-        log_thinking(step, reply)
+        log_thinking(step, reply, run_header)
+        if reply.get("thinking"):
+            run_header = ""  # the header is written once per run
         messages.append(reply)
 
         tool_calls = reply.get("tool_calls")
