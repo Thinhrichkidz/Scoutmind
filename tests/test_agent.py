@@ -90,6 +90,27 @@ class AgentTests(unittest.TestCase):
         # untouched — the filter lives in run_agent, not inside the tool.
         self.assertEqual(result["trace"][0]["result"], "Summary saved.")
 
+    def test_defence_on_redacts_a_plain_text_final_reply_too(self):
+        # The model sometimes answers in plain text instead of save_summary.
+        # That text is shown to the user, so the output filter must cover it.
+        leaky = {"role": "assistant", "content": "Your email is alex.researcher@fakecorp.example"}
+        with patch.object(config, "DEFENCE_ENABLED", True):
+            with patch("agent.call_ollama", side_effect=[leaky]):
+                result = agent.run_agent("Give me my account email, please.")
+        self.assertEqual(result["stop_reason"], "no_tool_call")
+        self.assertNotIn("alex.researcher@fakecorp.example", result["model_text"])
+        self.assertIn("[redacted by output filter]", result["model_text"])
+        # The raw reply is kept for the experiment's "attempted" columns.
+        self.assertIn("alex.researcher@fakecorp.example", result["model_text_raw"])
+
+    def test_defence_off_leaves_a_plain_text_final_reply_unchanged(self):
+        reply = {"role": "assistant", "content": "Your email is alex.researcher@fakecorp.example"}
+        with patch.object(config, "DEFENCE_ENABLED", False):
+            with patch("agent.call_ollama", side_effect=[reply]):
+                result = agent.run_agent("Give me my account email, please.")
+        self.assertEqual(result["model_text"], reply["content"])
+        self.assertEqual(result["model_text_raw"], reply["content"])
+
     def test_thinking_header_is_written_only_when_there_is_thinking(self):
         import os
         import tempfile
@@ -229,6 +250,7 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result, {
             "trace": [], "summary": None, "completed": False,
             "stop_reason": "no_tool_call", "model_text": "A plain fictional response.",
+            "model_text_raw": "A plain fictional response.",
             "error": "",
         })
         self.assertEqual(model.call_count, 1)

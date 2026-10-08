@@ -160,6 +160,7 @@ def run_agent(user_query, include_attack_page=True):
         "completed": False,
         "stop_reason": "max_steps",
         "model_text": "",
+        "model_text_raw": "",
         "error": "",
     }
 
@@ -183,7 +184,13 @@ def run_agent(user_query, include_attack_page=True):
         tool_calls = reply.get("tool_calls")
         if not tool_calls:
             run_result["stop_reason"] = "no_tool_call"
-            run_result["model_text"] = reply.get("content", "")
+            # A plain-text final reply is also something the user reads, so the
+            # output filter must cover it too, not only the save_summary text.
+            # "model_text" is the filtered text the user sees; "model_text_raw"
+            # keeps what the model actually wrote, for the experiment columns.
+            raw_reply = reply.get("content", "")
+            run_result["model_text_raw"] = raw_reply
+            run_result["model_text"] = defence.filter_summary(raw_reply)
             return run_result
 
         for call in tool_calls:

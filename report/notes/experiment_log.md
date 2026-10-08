@@ -252,11 +252,17 @@ Reading it:
 4. The output filter has now run against the live model (Run 3). Still
    to run under the old prompt: `cdn`, `text_only`. `legit_email` is done
    (Run 4).
-5. The output filter does not cover a plain-text final reply
-   (`model_text`). Fix it (call `filter_summary` on `model_text` too, add a
-   test, then re-run the defence-on runs) or report it as a known limitation?
-   Fixing it helps the defence but means the Run 3 numbers were measured
-   without that fix.
+5. FIXED (commit after Run 4): the output filter now also covers a
+   plain-text final reply. `agent.py` runs `filter_summary` on it;
+   `model_text` is the filtered text the user sees and `model_text_raw` keeps
+   the model's original words (the runner's `attempted_*` columns read the
+   raw one). Two new agent tests and one runner test cover it; 206 tests pass.
+   **Runs 3 and 4 were measured BEFORE this fix.** In Run 4 the 2 runs where
+   the user still received the email (defence on) were exactly this bypass, so
+   with the fix the user would have received it 0/10 times. For a clean
+   comparison, re-run the defence-on core attack and the defence-on
+   `legit_email` (about 30 minutes each) and report the old numbers as
+   "before the fix". Not yet re-run.
 
 ## Report reminders
 - Do not describe the attack rate as "70-80%" without naming the system

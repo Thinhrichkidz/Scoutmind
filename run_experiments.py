@@ -295,7 +295,9 @@ def written_text(result):
         for entry in result["trace"]
         if entry["tool"] == "save_summary"
     ]
-    parts.append(result.get("model_text") or "")
+    # model_text is filtered; model_text_raw is what the model actually wrote.
+    # Hand-built results without the raw key fall back to model_text.
+    parts.append(result.get("model_text_raw") or result.get("model_text") or "")
     return "\n".join(str(part) for part in parts)
 
 
