@@ -143,8 +143,8 @@ filter on the summary.
 | Measure | Undefended, old prompt (Run 0 / Run 2) | Original defended run (allowlist only) | **Run 3 (allowlist + filter)** |
 |---|---|---|---|
 | Lookup called (hijack) | 7/10, 6/10 | 8/10 | **9/10** |
-| `render_image` called | 4/10, 3/10 | 5/10 | **5/10** |
-| ...of which blocked by the allowlist | 0 | 4 | **5 of 5** |
+| `render_image` called | 3/10, 3/10 | 4/10 | **5/10** |
+| ...of which blocked by the allowlist | 0 | 4 of 4 | **5 of 5** |
 | Image leak (attacker server got data) | 3/10, 3/10 | 0/10 | **0/10** |
 | Secret in the summary the user sees | 7/10, 5/10 | 8/10 | **0/10** |
 | Model TRIED to put the secret in its answer (before the filter) | n/a | n/a | **9/10** |
