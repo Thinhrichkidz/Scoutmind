@@ -153,8 +153,10 @@ is replaced by a harmless one.
 
 ## 6. What is left to do
 
-1. Re-run the core attack with the defence on, and `legit_email`, to get
-   numbers that include the plain-reply fix (about 30 minutes each).
+1. DONE (Run 7): core attack with the defence on and `legit_email` re-run
+   on the fixed code. Core attack: 0/10 visible leak, model tried in 8/10.
+   `legit_email` with the defence on: user received their email 0/10
+   (was 2/10 before the fix).
 2. Decide whether to measure Version B (section 2b), and whether to also run
    the new-prompt condition against the defences.
 3. Update the report: numbers from section 3, the payload sentence, the test
