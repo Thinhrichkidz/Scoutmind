@@ -52,7 +52,7 @@ def check_url(url):
     No-op when config.DEFENCE_ENABLED is False, so the undefended baseline
     behaves exactly as before.
     """
-    if not config.DEFENCE_ENABLED:
+    if not (config.DEFENCE_ENABLED and config.ALLOWLIST_ENABLED):
         return
 
     if not is_allowed(url):
@@ -72,7 +72,7 @@ def filter_summary(text):
     closes the text-only leak (Section 8.2's Variant B) that render_image's
     allowlist has no way to see, since no tool call carries that leak.
     """
-    if not config.DEFENCE_ENABLED:
+    if not (config.DEFENCE_ENABLED and config.FILTER_ENABLED):
         return text
 
     filtered = text.replace(LEAKED_EMAIL, REDACTION)

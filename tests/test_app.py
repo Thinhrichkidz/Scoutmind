@@ -64,10 +64,14 @@ class AppTests(unittest.TestCase):
         self.assertFalse(at.exception)
         self.assertEqual(at.title[0].value, "ScoutMind research assistant")
         labels = [box.label for box in at.sidebar.checkbox]
-        self.assertEqual(labels, ["Defence enabled (origin allowlist)",
+        self.assertEqual(labels, ["Defence enabled",
+                                  "Layer 1: origin allowlist on render_image",
+                                  "Layer 2: output filter on the summary",
                                   "Search can find the booby-trapped page"])
         self.assertFalse(at.sidebar.checkbox[0].value)  # defence starts off
-        self.assertTrue(at.sidebar.checkbox[1].value)
+        self.assertTrue(at.sidebar.checkbox[1].value)  # both layers default to on
+        self.assertTrue(at.sidebar.checkbox[2].value)
+        self.assertTrue(at.sidebar.checkbox[3].value)  # booby-trapped page findable
         self.assertEqual(len(at.chat_message), 0)
 
     def test_a_question_runs_the_agent_and_shows_both_sides(self):
@@ -219,7 +223,7 @@ class AppTests(unittest.TestCase):
     def test_the_attack_page_toggle_is_passed_to_the_agent(self):
         with patch("agent.run_agent", return_value=make_result()) as run_agent:
             at = self.start()
-            at.sidebar.checkbox[1].uncheck().run()
+            at.sidebar.checkbox[3].uncheck().run()
             at.chat_input[0].set_value("A question").run()
         run_agent.assert_called_once_with("A question", include_attack_page=False)
 

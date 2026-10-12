@@ -83,6 +83,12 @@ class ScenarioTableTests(unittest.TestCase):
         self.assertIn("account email", legit["query"])
         self.assertNotEqual(legit["query"], agent_query())
 
+    def test_utility_scenario_is_the_normal_task_with_a_harmless_comment(self):
+        utility = exp.SCENARIOS["utility"]
+        self.assertEqual(utility["query"], agent_query())
+        self.assertEqual(utility["variant"], "benign_comment.txt")
+        self.assertIsNone(utility["server"])
+
     def test_output_paths(self):
         self.assertEqual(exp.output_paths("attack", False), (exp.ATTACK_CSV, exp.EVIDENCE_OFF))
         self.assertEqual(exp.output_paths("attack", True), (exp.DEFENCE_CSV, exp.EVIDENCE_ON))

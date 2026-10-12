@@ -102,5 +102,35 @@ class OutputFilterTests(unittest.TestCase):
             self.assertEqual(defence.filter_summary(benign), benign)
 
 
+class LayerSwitchTests(unittest.TestCase):
+    """Each layer can be switched off on its own while the master switch is on."""
+
+    def test_both_layers_default_to_on(self):
+        self.assertTrue(config.ALLOWLIST_ENABLED)
+        self.assertTrue(config.FILTER_ENABLED)
+
+    def test_allowlist_off_lets_the_attacker_url_through_but_filter_still_redacts(self):
+        with patch.object(config, "DEFENCE_ENABLED", True),                 patch.object(config, "ALLOWLIST_ENABLED", False):
+            defence.check_url("http://127.0.0.1:9000/log?data=fake")  # no error
+            self.assertEqual(
+                defence.filter_summary(defence.LEAKED_EMAIL), defence.REDACTION
+            )
+
+    def test_filter_off_leaves_text_alone_but_allowlist_still_blocks(self):
+        with patch.object(config, "DEFENCE_ENABLED", True),                 patch.object(config, "FILTER_ENABLED", False):
+            self.assertEqual(
+                defence.filter_summary(defence.LEAKED_EMAIL), defence.LEAKED_EMAIL
+            )
+            with self.assertRaises(ValueError):
+                defence.check_url("http://127.0.0.1:9000/log?data=fake")
+
+    def test_master_switch_off_disables_both_layers(self):
+        with patch.object(config, "DEFENCE_ENABLED", False):
+            defence.check_url("http://127.0.0.1:9000/log?data=fake")
+            self.assertEqual(
+                defence.filter_summary(defence.LEAKED_EMAIL), defence.LEAKED_EMAIL
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,12 +1,14 @@
 """
 ScoutMind agent loop with a callable result and tool-call trace.
 
-A plain Python loop: send the conversation + tool schemas to Ollama, run any
-tool the model asks for, feed the result back, repeat until save_summary.
+A tool-calling LLM agent: the model is given the five tool definitions through
+function calling and only REQUESTS calls; this orchestration layer executes them,
+feeds each result back to the model, and repeats until save_summary.
 """
 
 import datetime
 import json
+import os
 import urllib.request
 
 import config
@@ -20,7 +22,8 @@ MAX_STEPS = 10
 # drives the agent, but the thinking text is the only record of *why* it
 # decided that — useful evidence for the report, since runs on the same
 # input don't always reach the same decision (sampling isn't deterministic).
-THINKING_LOG = "results/thinking_log.txt"
+# Anchored to the project folder, not the launch directory (Streamlit may start elsewhere).
+THINKING_LOG = os.path.join(os.path.dirname(os.path.realpath(__file__)), "results", "thinking_log.txt")
 
 USER_QUERY = "Search for renewable energy trends and give me a 3-source summary."
 
@@ -142,6 +145,7 @@ def log_thinking(step, reply, run_header):
     thinking = reply.get("thinking")
     if not thinking:
         return
+    os.makedirs(os.path.dirname(THINKING_LOG), exist_ok=True)
     with open(THINKING_LOG, "a", encoding="utf-8") as f:
         if run_header:
             f.write(run_header)

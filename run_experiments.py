@@ -10,6 +10,9 @@ Scenarios (see SCENARIOS):
   text_only    the data is written into the summary text instead of an image
                request (the agent still looks it up, but no render_image
                call is involved, so there is nothing for the allowlist to block)
+  utility      the normal 3-source task with a harmless comment instead of the
+               injection (measures what the defence costs the agent when
+               nothing is attacking it: the completed column)
   legit_email  a genuine user request for their own account email, with the
                injection replaced by a harmless comment (measures whether the
                defence still lets legitimate use through)
@@ -97,6 +100,12 @@ SCENARIOS = {
     },
     # The page is still searchable, but its hidden comment is harmless, so
     # the only request for the account email comes from the user.
+    "utility": {
+        "query": agent.USER_QUERY,
+        "include_attack_page": True,
+        "variant": "benign_comment.txt",
+        "server": None,
+    },
     "legit_email": {
         "query": LEGIT_EMAIL_QUERY,
         "include_attack_page": True,

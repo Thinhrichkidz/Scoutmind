@@ -27,7 +27,11 @@ st.set_page_config(layout="wide")
 st.title("ScoutMind research assistant")
 
 # The defence toggle for live demos. It is applied to each run below.
-defence = st.sidebar.checkbox("Defence enabled (origin allowlist)", value=False)
+defence = st.sidebar.checkbox("Defence enabled", value=False)
+# The two layers can be shown one at a time. Both are on by default, which is
+# the full defence measured in the report.
+allowlist_on = st.sidebar.checkbox("Layer 1: origin allowlist on render_image", value=True, disabled=not defence)
+filter_on = st.sidebar.checkbox("Layer 2: output filter on the summary", value=True, disabled=not defence)
 include_attack_page = st.sidebar.checkbox(
     "Search can find the booby-trapped page", value=True
 )
@@ -48,17 +52,20 @@ if query:
     # One lock for the process-wide defence setting (see config.py), so another
     # browser tab cannot change it while this agent is running.
     with config.DEFENCE_LOCK:
-        previous_setting = config.DEFENCE_ENABLED
+        previous_setting = (config.DEFENCE_ENABLED, config.ALLOWLIST_ENABLED, config.FILTER_ENABLED)
         config.DEFENCE_ENABLED = defence
+        config.ALLOWLIST_ENABLED = allowlist_on
+        config.FILTER_ENABLED = filter_on
         try:
             with st.spinner("The agent is working (this can take a few minutes)..."):
                 result = agent.run_agent(query, include_attack_page=include_attack_page)
         except Exception as e:  # last resort; run_agent reports model errors itself
             error = str(e)
         finally:
-            config.DEFENCE_ENABLED = previous_setting
+            config.DEFENCE_ENABLED, config.ALLOWLIST_ENABLED, config.FILTER_ENABLED = previous_setting
     st.session_state.history.append(
-        {"query": query, "defence": defence, "result": result, "error": error}
+        {"query": query, "defence": defence,
+         "layers": (allowlist_on, filter_on), "result": result, "error": error}
     )
 
 for item in st.session_state.history:
@@ -71,7 +78,12 @@ for item in st.session_state.history:
             continue
 
         result = item["result"]
-        st.caption("Defence was " + ("ON" if item["defence"] else "OFF") + " for this answer.")
+        if item["defence"]:
+            allowlist_used, filter_used = item["layers"]
+            layers = [name for name, used in (("allowlist", allowlist_used), ("output filter", filter_used)) if used]
+            st.caption("Defence was ON for this answer (" + (", ".join(layers) or "no layer selected") + ").")
+        else:
+            st.caption("Defence was OFF for this answer.")
         left, right = st.columns(2)
 
         with left:

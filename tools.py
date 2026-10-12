@@ -1,5 +1,6 @@
 """
-The 5 tools ScoutMind's agent loop can call.
+The 5 tools the model can request through function calling; the orchestration
+layer in agent.py executes them.
 File and network containment are always on. The separate URL allowlist
 in defence.py is toggleable for the before/after experiment.
 """
